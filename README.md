@@ -1,3 +1,237 @@
+<div align="right"><a href="#english">English</a> | <a href="#简体中文">简体中文</a></div>
+
+<a id="english"></a>
+
+# Institutional Content Operations Workflow
+
+<div align="center">
+
+<strong>Closed-source input · Verifiable drafts · Three-stage human review · Small-sample retrospectives</strong>
+
+![Workflow](https://img.shields.io/badge/Workflow-Human%20in%20the%20Loop-166534?style=flat-square)
+![Input](https://img.shields.io/badge/Input-Closed%20Source%20Pack-0369A1?style=flat-square)
+![Evidence](https://img.shields.io/badge/Evidence-%5BCHECK%5D-F59E0B?style=flat-square)
+![Privacy](https://img.shields.io/badge/Identity-Anonymized-52525B?style=flat-square)
+![Language](https://img.shields.io/badge/Language-Python%203-3776AB?style=flat-square&logo=python&logoColor=white)
+
+📋 [Collaboration Ledger](./workflows.md) · ✅ [Execution SOP](./skills.md) · ✍️ [Content Prompts](./prompt-engineering.md) · 📰 [Columns and Templates](./product-design.md) · 📊 [Rotation Review](./data-analysis.md)
+
+</div>
+
+> [!IMPORTANT]
+> AI processes only the supplied closed-source material. When a person, institution, title, time, place, number, or policy statement is missing, it must output `[CHECK]`; it must not invent background or strengthen claims beyond the source material.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Highlights](#highlights)
+- [Example](#example)
+- [Capabilities](#capabilities)
+- [Tool and Method Stack](#tool-and-method-stack)
+- [Installation and Deployment](#installation-and-deployment)
+- [Project Structure](#project-structure)
+- [Pre-Publication Checklist](#pre-publication-checklist)
+- [FAQ](#faq)
+- [Credibility and Confidentiality Boundaries](#credibility-and-confidentiality-boundaries)
+
+## Introduction
+
+This repository is a **content-production workflow and prompt toolkit** for institutional public accounts, industry news, conference reports, and first drafts of policy explainers. AI is assigned to organize structure and create a verifiable draft, while factual judgment, editorial restraint, and publication responsibility remain with a three-stage human review.
+
+| Input | Intermediate Artifacts | Output |
+|---|---|---|
+| Closed source pack, proper-name sheet, content type, publication rules, and review owners | Draft, citation mapping, `[CHECK]` list, and image credits | Three-stage review record, publishable copy, publication checklist, columns, and rotation retrospective |
+
+## Highlights
+
+- 📦 **Closed source pack**: work only from agendas, confirmed talking points, public background, and authorized images.
+- 🔖 **Proper-name verification**: check institutions, names, titles, and fixed wording item by item.
+- 🧷 **Preserve claim strength**: do not upgrade “planned,” “exploring,” or “may” into “completed,” “leading,” or “will.”
+- 🚩 **Make verification gaps explicit**: mark insufficient evidence as `[CHECK]` instead of filling it with plausible guesses.
+- 👥 **Three distinct human reviews**: fact, expression, and publication reviews have different focuses and retained records.
+- 📊 **Small-sample restraint**: use a rotation-based quasi-experiment to observe direction, without claiming random A/B testing or causality.
+- 🕶️ **Anonymized public assets**: do not disclose entity names, contacts, or unpublished preparations.
+
+## Example
+
+### Task Input Card
+
+```yaml
+content_type: Conference report
+source_pack:
+  - Agenda
+  - Confirmed talking points
+  - Public background material
+  - Authorized images
+term_sheet: [full institution names, participant names and titles, fixed policy wording]
+claims_policy: Do not strengthen claims beyond the source material
+reviewers:
+  facts: Fact owner
+  language: Editorial owner
+  release: Publication owner
+required_output: [draft, citation mapping, CHECK list, image credits, publication checklist]
+```
+
+### Verifiable Output Fragment
+
+```markdown
+## Event Overview
+
+The event was held on [CHECK: date] at [CHECK: location] and focused on the “confirmed theme.”
+
+### Citation Mapping
+
+- “Confirmed theme” → source_pack/agenda/theme
+- Speaker name and title → term_sheet/people
+- Attendance → [CHECK: not present in current material; omit from the body]
+```
+
+### Editorial and Review Chain
+
+<p align="center">
+  <img src="./assets/readme-architecture.svg" alt="Responsibility-boundary workflow for institutional content operations, from closed materials and AI-assisted drafting through three-stage human review, publication, and retrospective" width="100%">
+</p>
+
+<p align="center"><sub>Editable source: <a href="./assets/readme-architecture.drawio">readme-architecture.drawio</a></sub></p>
+
+## Capabilities
+
+| Asset | Reusable Capability | Document |
+|---|---|---|
+| Content positioning | Reader personas, column system, and headline rules | [product-design.md](./product-design.md) |
+| Three template types | Industry/technical exchange, expert viewpoints, and organizational updates | [product-design.md](./product-design.md) |
+| Prompt tools | Closed inputs, proper-name verification, claim constraints, and verification flags | [prompt-engineering.md](./prompt-engineering.md) |
+| Production SOP | Weekly cadence, three-stage review roles, and publication checklist | [skills.md](./skills.md) |
+| Collaboration ledger | Parallel workstreams, dependencies, risks, and pending decisions | [workflows.md](./workflows.md) |
+| Operations retrospective | Rotation records for publication time × content structure | [data-analysis.md](./data-analysis.md) |
+
+## Tool and Method Stack
+
+| Layer | Usage |
+|---|---|
+| Content engineering | Closed source packs, proper-name sheets, citation mapping, and `[CHECK]` lists |
+| Prompt Engineering | Structural templates, factual constraints, prohibited wording, and claim-strength checks |
+| Human governance | Fact review, expression review, publication review, and accountability records |
+| Operations management | Scheduling SOP, parallel-work ledger, dependencies, and risk fields |
+| Data analysis | Rotation-based quasi-experiments and directional metrics such as reads, shares, and interactions |
+| Reference implementation | Python 3 standard library; publication preflight for `[CHECK]`, required proper names, and prohibited language |
+| Documentation | Markdown, YAML, draw.io, SVG, and GitHub Alerts |
+
+## Installation and Deployment
+
+### Get the Workflow
+
+```bash
+git clone https://github.com/ChrysFu-FndVent/institutional-content-ops.git
+cd institutional-content-ops
+```
+
+The documentation has no installation dependencies. The pre-publication checker requires Python 3.9 or later and has no third-party dependencies:
+
+```bash
+python3 src/content_guard.py
+python3 src/content_guard.py --self-test
+```
+
+The script only finds unresolved `[CHECK]` markers, missing proper names, and prohibited expressions. It does not determine factual truth or grant publication permission. Markdown templates can be used directly in a team knowledge base, editing SOP, or AI tool that supports structured prompts.
+
+### Deployment
+
+This repository has no persistent service. `preflight` can be invoked as a local editing tool, a CI check, or a synchronous step before a content system submits a draft for review:
+
+```python
+from src.content_guard import preflight
+```
+
+The caller supplies the draft, required proper names, and prohibited expressions, then stores the results. Content may enter the publication system only after the script passes and all fact, expression, and publication reviews are complete. The script itself must not hold publishing credentials.
+
+### Recommended Order for One Content Task
+
+1. Use [product-design.md](./product-design.md) to select readers, a column, and a content template.
+2. Build the closed source pack, proper-name sheet, prohibited-language rules, and image-authorization list.
+3. Use [prompt-engineering.md](./prompt-engineering.md) to produce the draft, citation mapping, and `[CHECK]` list.
+4. Complete fact, expression, and publication reviews according to [skills.md](./skills.md).
+5. Update task state, dependencies, risks, and pending decisions in [workflows.md](./workflows.md).
+6. Add publication data to the rotation record in [data-analysis.md](./data-analysis.md), and use it only for multi-cycle directional judgment.
+
+> [!TIP]
+> If the source pack, proper-name sheet, or final fact owner is missing, keep the task in the preparation stage.
+
+## Project Structure
+
+```text
+institutional-content-ops/
+├── README.md              # Workflow entry point, usage, and FAQ
+├── .gitignore             # Python cache ignore rules
+├── assets/
+│   ├── readme-architecture.drawio  # Editable responsibility-boundary source
+│   └── readme-architecture.svg     # README vector diagram
+├── src/
+│   └── content_guard.py    # Python pre-publication checker reference
+├── workflows.md           # Preparation flow, parallel ledger, and collaboration cadence
+├── skills.md              # Event and content-production scheduling SOP
+├── prompt-engineering.md  # Three content prompts and factual constraints
+├── product-design.md      # Content positioning, columns, and template rules
+└── data-analysis.md       # Rotation-based quasi-experiment and metric definitions
+```
+
+## Pre-Publication Checklist
+
+- [ ] Every person, institution, title, time, place, and number maps back to source material
+- [ ] All `[CHECK]` items are resolved or explicitly removed from the body
+- [ ] Quotations, policy wording, and data do not strengthen the source claims
+- [ ] Image source, authorization, credit, crop, and alternative text are complete
+- [ ] Fact, expression, and publication reviews each have an owner and a record
+- [ ] Internal contacts, unpublished milestones, and sensitive preparations are removed
+- [ ] Post-publication metrics are not presented as causal conclusions
+
+## FAQ
+
+<details>
+<summary><strong>Can AI fill gaps with public knowledge when the source material is incomplete?</strong></summary>
+
+Not by default. Missing information must be marked `[CHECK]` and sourced by the fact owner. Only public material explicitly added to the closed source pack and approved for use may enter the text.
+</details>
+
+<details>
+<summary><strong>Why does the same content require three human reviews?</strong></summary>
+
+They are not duplicate checks. Fact review confirms information and sources; expression review examines structure, tone, and claim strength; publication review verifies permissions, formatting, images, links, and the final version.
+</details>
+
+<details>
+<summary><strong>What if a proper name is wrong or identities are confused?</strong></summary>
+
+Stop publication, verify every item against the proper-name sheet, and check namesakes, historical titles, and abbreviation mappings. After correction, repeat fact review rather than changing only one occurrence in the draft.
+</details>
+
+<details>
+<summary><strong>Can a small sample determine the “best publication time”?</strong></summary>
+
+No direct conclusion is justified. A single account with non-random samples is better suited to multi-cycle rotation observations. Topic, external events, and sample size may all affect results, so findings should be stated as directions for the next test.
+</details>
+
+<details>
+<summary><strong>Can content be published automatically after the preflight script passes?</strong></summary>
+
+No. The script can only find formatted `[CHECK]` markers, missing proper names, and configured prohibited expressions. It cannot verify facts, image rights, policy context, or publication permissions. A passing result means only that the draft may enter the three-stage human review; it does not authorize publication.
+</details>
+
+## Credibility and Confidentiality Boundaries
+
+- The public version retains the actual workflow and methods; it does not invent unavailable duration, error-rate, or growth figures.
+- Companies, institutions, account owners, and partner organizations remain anonymous.
+- Internal preparation counts, contacts, unpublished plans, and negotiation details do not enter the public version.
+- AI has no publishing permissions; final responsibility remains with human reviewers and the account owner.
+
+---
+
+<p align="right"><a href="#english">Back to English</a></p>
+
+---
+
+<a id="简体中文"></a>
+
 # 机构内容运营工作流
 
 <div align="center">
