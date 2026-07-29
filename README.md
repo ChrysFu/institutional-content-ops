@@ -1,5 +1,11 @@
 # 机构内容运营工作流
 
+<p align="center">
+  <img src="./assets/readme-hero.webp" alt="封闭来源材料经过辅助写作、事实审核、表达审核与发布审核形成成稿的概念流程图" width="100%">
+  <br>
+  <sub>编辑流程示意：AI 整理封闭素材，事实与发布责任始终由人工承担。</sub>
+</p>
+
 <div align="center">
 
 <strong>封闭素材输入 · 可核对初稿 · 人工三审 · 小样本复盘</strong>
@@ -9,7 +15,7 @@
 ![Evidence](https://img.shields.io/badge/Evidence-%5BCHECK%5D-F59E0B?style=flat-square)
 ![Privacy](https://img.shields.io/badge/Identity-Anonymized-52525B?style=flat-square)
 
-[协作台账](./workflows.md) · [执行 SOP](./skills.md) · [内容 Prompt](./prompt-engineering.md) · [栏目与模板](./product-design.md) · [轮换复盘](./data-analysis.md)
+📋 [协作台账](./workflows.md) · ✅ [执行 SOP](./skills.md) · ✍️ [内容 Prompt](./prompt-engineering.md) · 📰 [栏目与模板](./product-design.md) · 📊 [轮换复盘](./data-analysis.md)
 
 </div>
 
