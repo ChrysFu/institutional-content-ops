@@ -100,7 +100,7 @@ required_output: [初稿, 引用映射, CHECK清单, 图片署名, 发布检查�
 | 参考实现 | Python 3 标准库；`[CHECK]`、必需专名和禁用表达的发布前预检 |
 | 文档表达 | Markdown、YAML、draw.io、SVG、GitHub Alerts |
 
-## 安装与使用
+## 安装与部署
 
 ### 获取工作流
 
@@ -117,6 +117,16 @@ python3 src/content_guard.py --self-test
 ```
 
 脚本只发现未解决的 `[CHECK]`、缺失专名和禁用表达，不判断事实真伪，也不会授予发布权限。Markdown 模板仍可直接用于团队知识库、编辑 SOP 或支持结构化 Prompt 的 AI 工具。
+
+### 部署方式
+
+本仓库没有常驻服务。可将 `preflight` 作为本地编辑工具、CI 检查或内容系统提交审核前的同步步骤调用：
+
+```python
+from src.content_guard import preflight
+```
+
+部署时由调用方传入草稿、必需专名和禁用表达，并保存检查结果。只有脚本检查通过且事实审、表达审、发布审全部完成后，内容才可以进入发布系统；脚本本身不应持有账号发布凭证。
 
 ### 一次内容任务的推荐顺序
 
@@ -182,6 +192,12 @@ institutional-content-ops/
 <summary><strong>小样本数据可以用来选择“最佳发布时间”吗？</strong></summary>
 
 不能直接下结论。单账号、非随机样本更适合做多周期轮换观察；内容主题、外部事件和样本量都可能影响结果，应表述为下一轮测试方向。
+</details>
+
+<details>
+<summary><strong>内容预检脚本通过后可以自动发布吗？</strong></summary>
+
+不可以。脚本只能发现格式化的 `[CHECK]`、缺失专名和配置中的禁用表达，不能验证事实、图片授权、政策语境或发布权限。通过结果只表示可以进入人工三审，不代表允许发布。
 </details>
 
 ## 可信度与保密边界
