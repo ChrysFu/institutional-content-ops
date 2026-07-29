@@ -1,11 +1,5 @@
 # 机构内容运营工作流
 
-<p align="center">
-  <img src="./assets/readme-hero.webp" alt="封闭来源材料经过辅助写作、事实审核、表达审核与发布审核形成成稿的概念流程图" width="100%">
-  <br>
-  <sub>编辑流程示意：AI 整理封闭素材，事实与发布责任始终由人工承担。</sub>
-</p>
-
 <div align="center">
 
 <strong>封闭素材输入 · 可核对初稿 · 人工三审 · 小样本复盘</strong>
@@ -76,19 +70,11 @@ required_output: [初稿, 引用映射, CHECK清单, 图片署名, 发布检查�
 
 ### 编辑与审核链
 
-```mermaid
-flowchart LR
-    A["封闭素材包 + 专名表"] --> B["模板选择与初稿生成"]
-    B --> C["引用映射 + CHECK 清单"]
-    C --> D{"事实审"}
-    D -->|退回| B
-    D -->|通过| E{"表达审"}
-    E -->|退回| B
-    E -->|通过| F{"发布审"}
-    F -->|退回| B
-    F -->|通过| G["发布与数据回收"]
-    G --> H["多周期方向观察"]
-```
+<p align="center">
+  <img src="./assets/readme-architecture.svg" alt="机构内容运营中封闭素材、AI 辅助初稿、人工三审、发布和复盘的责任边界流程图" width="100%">
+</p>
+
+<p align="center"><sub>可编辑版本：<a href="./assets/readme-architecture.drawio">readme-architecture.drawio</a></sub></p>
 
 ## 功能清单
 
@@ -110,7 +96,7 @@ flowchart LR
 | 人工治理 | 事实审、表达审、发布审、责任留痕 |
 | 运营管理 | 排期 SOP、多线台账、依赖与风险字段 |
 | 数据分析 | 轮换式准实验、阅读/分享/互动等方向性指标 |
-| 文档表达 | Markdown、YAML、Mermaid、GitHub Alerts |
+| 文档表达 | Markdown、YAML、draw.io、SVG、GitHub Alerts |
 
 ## 安装与使用
 
@@ -140,6 +126,9 @@ cd institutional-content-ops
 ```text
 institutional-content-ops/
 ├── README.md              # 工作流入口、使用方式与 FAQ
+├── assets/
+│   ├── readme-architecture.drawio  # 可编辑责任边界源文件
+│   └── readme-architecture.svg     # README 矢量展示图
 ├── workflows.md           # 筹备流程、多线台账与协作节奏
 ├── skills.md              # 会务与内容生产排期 SOP
 ├── prompt-engineering.md  # 三类内容 Prompt 与事实约束
