@@ -8,6 +8,7 @@
 ![Input](https://img.shields.io/badge/Input-Closed%20Source%20Pack-0369A1?style=flat-square)
 ![Evidence](https://img.shields.io/badge/Evidence-%5BCHECK%5D-F59E0B?style=flat-square)
 ![Privacy](https://img.shields.io/badge/Identity-Anonymized-52525B?style=flat-square)
+![Language](https://img.shields.io/badge/Language-Python%203-3776AB?style=flat-square&logo=python&logoColor=white)
 
 📋 [协作台账](./workflows.md) · ✅ [执行 SOP](./skills.md) · ✍️ [内容 Prompt](./prompt-engineering.md) · 📰 [栏目与模板](./product-design.md) · 📊 [轮换复盘](./data-analysis.md)
 
@@ -96,6 +97,7 @@ required_output: [初稿, 引用映射, CHECK清单, 图片署名, 发布检查�
 | 人工治理 | 事实审、表达审、发布审、责任留痕 |
 | 运营管理 | 排期 SOP、多线台账、依赖与风险字段 |
 | 数据分析 | 轮换式准实验、阅读/分享/互动等方向性指标 |
+| 参考实现 | Python 3 标准库；`[CHECK]`、必需专名和禁用表达的发布前预检 |
 | 文档表达 | Markdown、YAML、draw.io、SVG、GitHub Alerts |
 
 ## 安装与使用
@@ -107,7 +109,14 @@ git clone https://github.com/ChrysFu-FndVent/institutional-content-ops.git
 cd institutional-content-ops
 ```
 
-无需安装代码依赖。可将 Markdown 模板复制到团队知识库、编辑 SOP 或支持结构化 Prompt 的 AI 工具中。
+文档无需安装依赖。发布前预检参考实现使用 Python 3.9 或更高版本，不依赖第三方包：
+
+```bash
+python3 src/content_guard.py
+python3 src/content_guard.py --self-test
+```
+
+脚本只发现未解决的 `[CHECK]`、缺失专名和禁用表达，不判断事实真伪，也不会授予发布权限。Markdown 模板仍可直接用于团队知识库、编辑 SOP 或支持结构化 Prompt 的 AI 工具。
 
 ### 一次内容任务的推荐顺序
 
@@ -126,9 +135,12 @@ cd institutional-content-ops
 ```text
 institutional-content-ops/
 ├── README.md              # 工作流入口、使用方式与 FAQ
+├── .gitignore             # Python 缓存忽略规则
 ├── assets/
 │   ├── readme-architecture.drawio  # 可编辑责任边界源文件
 │   └── readme-architecture.svg     # README 矢量展示图
+├── src/
+│   └── content_guard.py    # Python 内容发布前预检参考实现
 ├── workflows.md           # 筹备流程、多线台账与协作节奏
 ├── skills.md              # 会务与内容生产排期 SOP
 ├── prompt-engineering.md  # 三类内容 Prompt 与事实约束
