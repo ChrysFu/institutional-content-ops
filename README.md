@@ -7,6 +7,8 @@
 <img alt="Python" src="https://img.shields.io/badge/Reference-Python%20standard%20library-3776AB?style=flat-square&logo=python&logoColor=white">
 <img alt="Workflow" src="https://img.shields.io/badge/Workflow-Content%20and%20meeting%20operations-7C3AED?style=flat-square">
 <img alt="Review" src="https://img.shields.io/badge/Release-Human%20approval%20required-F59E0B?style=flat-square">
+<p><a href="workflows.md">🧭 Operations</a> · <a href="skills.md">🧩 SOPs</a> · <a href="prompt-engineering.md">💬 Editorial prompts</a> · <a href="data-analysis.md">📊 Analysis</a></p>
+<img src="assets/readme-architecture.svg" alt="Institutional content operations workflow diagram" width="100%">
 </div>
 
 <a id="简体中文"></a>
