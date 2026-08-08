@@ -1,0 +1,10 @@
+{
+  "required_terms": [
+    "来源："
+  ],
+  "forbidden_terms": [
+    "行业第一",
+    "绝对领先"
+  ],
+  "case_sensitive": true
+}
