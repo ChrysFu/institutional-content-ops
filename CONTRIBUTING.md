@@ -19,3 +19,5 @@ python3 src/repository_checks.py .
 ```
 
 Pull requests should explain the operational risk addressed, evidence used, compatibility impact, and rollback path. Do not include real confidential drafts, credentials, private analytics, or unapproved personal information in fixtures or logs.
+
+Contributions incorporated into this repository are distributed under the repository's [MIT License](LICENSE). By submitting a contribution, you confirm that you have the right to do so under those terms.
