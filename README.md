@@ -6,6 +6,7 @@ Operational workflows and deterministic preflight checks for accountable institu
 
 <p>
   <a href="https://github.com/ChrysFu/institutional-content-ops/actions/workflows/quality.yml"><img alt="Quality workflow" src="https://img.shields.io/github/actions/workflow/status/ChrysFu/institutional-content-ops/quality.yml?branch=main&amp;style=flat" /></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-15803D?style=flat" /></a>
   <a href="https://github.com/ChrysFu/institutional-content-ops/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/ChrysFu/institutional-content-ops?style=flat" /></a>
   <a href="https://github.com/ChrysFu/institutional-content-ops/search?l=Python"><img alt="Top language" src="https://img.shields.io/github/languages/top/ChrysFu/institutional-content-ops?style=flat" /></a>
   <a href="CONTRIBUTING.md"><img alt="Pull requests welcome" src="https://img.shields.io/badge/PRs-welcome-15803D?style=flat" /></a>
@@ -29,7 +30,7 @@ Operational workflows and deterministic preflight checks for accountable institu
   - [Documentation map](#documentation-map)
   - [Safety boundary](#safety-boundary)
   - [Contributing](#contributing)
-  - [License status](#license-status)
+  - [License](#license)
 - [简体中文](#简体中文)
   - [项目概览](#项目概览)
   - [工作流](#工作流)
@@ -39,7 +40,7 @@ Operational workflows and deterministic preflight checks for accountable institu
   - [文档导航](#文档导航)
   - [安全边界](#安全边界)
   - [参与贡献](#参与贡献)
-  - [许可状态](#许可状态)
+  - [许可证](#许可证)
 
 </details>
 
@@ -147,9 +148,9 @@ python3 src/repository_checks.py .
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the test-first development loop, validation commands, compatibility expectations, and pull-request requirements.
 
-### License status
+### License
 
-This repository does not currently contain a `LICENSE` file. No open-source license grant should be inferred until the repository owner adds one.
+Copyright (c) 2026 ChrysFu. The entire repository, including source code, tests, workflows, documentation, templates, examples, and visual assets, is licensed under the [MIT License](LICENSE). The license permits reuse and adaptation provided that the copyright and permission notices are retained; it does not grant trademark rights.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -257,8 +258,8 @@ python3 src/repository_checks.py .
 
 测试优先的开发循环、验证命令、兼容性要求和 Pull Request 规范见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-### 许可状态
+### 许可证
 
-本仓库目前没有 `LICENSE` 文件。在仓库所有者添加许可证之前，不应推定其授予了开源许可。
+Copyright (c) 2026 ChrysFu。本仓库的源代码、测试、工作流、文档、模板、示例和视觉资产统一采用 [MIT License](LICENSE)。在保留版权和许可声明的前提下可以复用和修改；许可证不授予商标权。
 
 <p align="right">(<a href="#readme-top">返回顶部</a>)</p>
