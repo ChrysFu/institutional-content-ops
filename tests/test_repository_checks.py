@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 
 from src.repository_checks import validate_repository
 
@@ -27,13 +27,27 @@ class RepositoryCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             (root / "README.md").write_text(
-                "[web](https://example.org) [mail](mailto:team@example.org) [section](#usage)\n",
+                "[web](https://example.org) [mail](mailto:team@example.org) [section](#usage)\n"
+                "\n## Usage\n",
                 encoding="utf-8",
             )
 
             issues = validate_repository(root)
 
         self.assertEqual(issues, [])
+
+    def test_reports_missing_same_document_anchor(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            (root / "README.md").write_text(
+                "[missing section](#does-not-exist)\n\n## Existing section\n",
+                encoding="utf-8",
+            )
+
+            issues = validate_repository(root)
+
+        self.assertEqual(len(issues), 1)
+        self.assertEqual(issues[0].code, "missing_local_anchor")
 
     def test_reports_invalid_json_with_location(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

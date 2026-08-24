@@ -12,10 +12,13 @@ Contributions should improve a real content-operation need while preserving the 
 
 ```bash
 python3 -m compileall -q src tests
+ruff check src tests
 python3 -m unittest discover -s tests -v
 python3 src/content_guard.py --self-test
 python3 src/content_guard.py --draft examples/draft-ready.md --policy content-policy.example.json --fail-on-issues
+python3 src/content_guard.py --scan examples --policy content-policy.example.json --format sarif --output artifacts/content-scan.sarif --fail-on-issues
 python3 src/repository_checks.py .
+actionlint
 ```
 
 Pull requests should explain the operational risk addressed, evidence used, compatibility impact, and rollback path. Do not include real confidential drafts, credentials, private analytics, or unapproved personal information in fixtures or logs.

@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Iterable, Sequence
 import json
 import os
-from pathlib import Path
-import re
 import sys
 import tempfile
+from collections.abc import Iterable, Sequence
+from pathlib import Path
+
+try:
+    from .content_scan import ContentScanError, normalize_policy, scan_content, scan_paths, to_sarif
+except ImportError:  # Support direct execution: python src/content_guard.py
+    from content_scan import ContentScanError, normalize_policy, scan_content, scan_paths, to_sarif
 
 
-CHECK_PATTERN = re.compile(r"\[CHECK(?::[^\]]+)?\]")
 DEFAULT_DRAFT = "活动于 [CHECK: 日期] 举行，围绕已确认主题展开。"
 DEFAULT_REQUIRED_TERMS = ("已确认主题",)
 DEFAULT_FORBIDDEN_TERMS = ("行业第一", "绝对领先")
-POLICY_KEYS = frozenset({"required_terms", "forbidden_terms", "case_sensitive"})
 
 
 class ContentGuardError(Exception):
@@ -40,17 +42,33 @@ def preflight(
     Callers may opt into Unicode-aware case-insensitive matching.
     """
 
-    required = list(required_terms)
-    forbidden = list(forbidden_terms)
-    searchable_draft = draft if case_sensitive else draft.casefold()
+    findings = scan_content(
+        draft,
+        {
+            "required_terms": list(required_terms),
+            "forbidden_terms": list(forbidden_terms),
+            "case_sensitive": case_sensitive,
+        },
+    )
+    return _legacy_result(findings)
 
-    def contains(term: str) -> bool:
-        candidate = term if case_sensitive else term.casefold()
-        return candidate in searchable_draft
 
-    unresolved = CHECK_PATTERN.findall(draft)
-    missing_terms = [term for term in required if not contains(term)]
-    forbidden_hits = [term for term in forbidden if contains(term)]
+def _legacy_result(findings: Sequence[dict[str, object]]) -> dict[str, object]:
+    unresolved = [
+        finding["value"]
+        for finding in findings
+        if finding["rule_id"] == "content.unresolved_check"
+    ]
+    missing_terms = [
+        finding["value"]
+        for finding in findings
+        if finding["rule_id"] == "content.required_term"
+    ]
+    forbidden_hits = [
+        finding["value"]
+        for finding in findings
+        if finding["rule_id"] == "content.forbidden_term"
+    ]
     issues = {
         "unresolved_checks": unresolved,
         "missing_required_terms": missing_terms,
@@ -68,17 +86,6 @@ def preflight(
         "summary": summary,
         "release_approved": False,
     }
-
-
-def _validate_terms(value: object, field: str) -> list[str]:
-    if not isinstance(value, list) or any(
-        not isinstance(term, str) or not term.strip() for term in value
-    ):
-        raise ContentGuardError(
-            "invalid_policy",
-            f"{field} must be a list of non-empty strings",
-        )
-    return value
 
 
 def load_policy(path: Path) -> dict[str, object]:
@@ -107,24 +114,10 @@ def load_policy(path: Path) -> dict[str, object]:
     if not isinstance(policy, dict):
         raise ContentGuardError("invalid_policy", "policy must be a JSON object")
 
-    unknown_keys = sorted(set(policy) - POLICY_KEYS)
-    if unknown_keys:
-        raise ContentGuardError(
-            "invalid_policy",
-            f"unsupported policy keys: {', '.join(unknown_keys)}",
-        )
-
-    required_terms = _validate_terms(policy.get("required_terms", []), "required_terms")
-    forbidden_terms = _validate_terms(policy.get("forbidden_terms", []), "forbidden_terms")
-    case_sensitive = policy.get("case_sensitive", True)
-    if not isinstance(case_sensitive, bool):
-        raise ContentGuardError("invalid_policy", "case_sensitive must be a boolean")
-
-    return {
-        "required_terms": required_terms,
-        "forbidden_terms": forbidden_terms,
-        "case_sensitive": case_sensitive,
-    }
+    try:
+        return normalize_policy(policy)
+    except ContentScanError as error:
+        raise ContentGuardError(error.code, str(error)) from error
 
 
 def read_draft(source: str) -> str:
@@ -195,9 +188,20 @@ def _emit_error(error: ContentGuardError) -> int:
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true", help="run built-in smoke checks")
-    parser.add_argument("--draft", metavar="PATH", help="UTF-8 draft path, or - for standard input")
+    inputs = parser.add_mutually_exclusive_group()
+    inputs.add_argument("--draft", metavar="PATH", help="UTF-8 draft path, or - for standard input")
+    inputs.add_argument(
+        "--scan",
+        metavar="PATH",
+        action="append",
+        help="scan a UTF-8 Markdown/text file or directory; repeat for multiple sources",
+    )
     parser.add_argument("--policy", type=Path, help="JSON file containing content policy terms")
-    parser.add_argument("--output", type=Path, help="write JSON result atomically to this path")
+    parser.add_argument("--format", choices=("json", "sarif"), default="json")
+    parser.add_argument("--content-id", default="", help="content identifier recorded in scan audit data")
+    parser.add_argument("--revision", default="", help="content revision recorded in scan audit data")
+    parser.add_argument("--policy-version", default="", help="policy version recorded in scan audit data")
+    parser.add_argument("--output", type=Path, help="write the result atomically to this path")
     parser.add_argument(
         "--fail-on-issues",
         action="store_true",
@@ -214,28 +218,53 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     try:
-        if args.draft is None:
+        if args.scan:
+            policy = load_policy(args.policy) if args.policy else normalize_policy({})
+            result = scan_paths(
+                args.scan,
+                policy,
+                audit_context={
+                    "content_id": args.content_id,
+                    "revision": args.revision,
+                    "policy_version": args.policy_version,
+                },
+            )
+            report = to_sarif(result) if args.format == "sarif" else result
+        elif args.draft is None:
             draft = DEFAULT_DRAFT
             policy = {
                 "required_terms": list(DEFAULT_REQUIRED_TERMS),
                 "forbidden_terms": list(DEFAULT_FORBIDDEN_TERMS),
                 "case_sensitive": True,
             }
+            result = preflight(draft, **policy)
+            report = result
         else:
             draft = read_draft(args.draft)
-            policy = load_policy(args.policy) if args.policy else {
-                "required_terms": [],
-                "forbidden_terms": [],
-                "case_sensitive": True,
-            }
+            policy = load_policy(args.policy) if args.policy else normalize_policy({})
+            findings = scan_content(draft, policy)
+            result = _legacy_result(findings)
+            custom_rule_ids = {rule["id"] for rule in policy["rules"]}
+            custom_findings = [
+                finding for finding in findings if finding["rule_id"] in custom_rule_ids
+            ]
+            if custom_findings:
+                result["findings"] = custom_findings
+                result["summary"]["rule_finding_count"] = len(custom_findings)
+                result["summary"]["issue_count"] += len(custom_findings)
+                result["ready_for_human_review"] = result["ready_for_human_review"] and not any(
+                    finding["severity"] == "error" for finding in custom_findings
+                )
+            report = result
 
-        result = preflight(draft, **policy)
-        payload = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
+        payload = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
         if args.output:
             write_result(args.output, payload)
         else:
             sys.stdout.write(payload)
         return 1 if args.fail_on_issues and not result["ready_for_human_review"] else 0
+    except ContentScanError as error:
+        return _emit_error(ContentGuardError(error.code, str(error)))
     except ContentGuardError as error:
         return _emit_error(error)
 

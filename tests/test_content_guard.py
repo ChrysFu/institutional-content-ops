@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 from src.content_guard import preflight
-
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CONTENT_GUARD = REPOSITORY_ROOT / "src" / "content_guard.py"
@@ -158,6 +157,118 @@ class ContentGuardCliTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 2)
         payload = json.loads(completed.stderr)
         self.assertEqual(payload["error"]["code"], "policy_encoding_error")
+
+    def test_cli_rejects_invalid_structured_rules(self) -> None:
+        invalid_rules = {
+            "duplicate IDs": [
+                {
+                    "id": "STYLE001",
+                    "type": "forbidden_term",
+                    "term": "maybe",
+                    "severity": "warning",
+                    "message": "Use direct wording.",
+                },
+                {
+                    "id": "STYLE001",
+                    "type": "required_term",
+                    "term": "source",
+                    "severity": "error",
+                    "message": "Add a source.",
+                },
+            ],
+            "invalid regex": [
+                {
+                    "id": "STYLE002",
+                    "type": "regex",
+                    "pattern": "[",
+                    "severity": "warning",
+                    "message": "Invalid pattern.",
+                }
+            ],
+            "invalid severity": [
+                {
+                    "id": "STYLE003",
+                    "type": "forbidden_term",
+                    "term": "maybe",
+                    "severity": "critical",
+                    "message": "Use direct wording.",
+                }
+            ],
+            "unexpected field": [
+                {
+                    "id": "STYLE004",
+                    "type": "forbidden_term",
+                    "term": "maybe",
+                    "severity": "warning",
+                    "message": "Use direct wording.",
+                    "replacement": "will",
+                }
+            ],
+            "reserved ID": [
+                {
+                    "id": "content.unresolved_check",
+                    "type": "forbidden_term",
+                    "term": "maybe",
+                    "severity": "warning",
+                    "message": "Use direct wording.",
+                }
+            ],
+        }
+
+        for label, rules in invalid_rules.items():
+            with self.subTest(label=label), tempfile.TemporaryDirectory() as temporary_directory:
+                directory = Path(temporary_directory)
+                draft = directory / "draft.md"
+                policy = directory / "policy.json"
+                draft.write_text("draft", encoding="utf-8")
+                policy.write_text(json.dumps({"rules": rules}), encoding="utf-8")
+
+                completed = self.run_guard(
+                    "--scan",
+                    str(draft),
+                    "--policy",
+                    str(policy),
+                )
+
+            self.assertEqual(completed.returncode, 2)
+            payload = json.loads(completed.stderr)
+            self.assertEqual(payload["error"]["code"], "invalid_policy")
+
+    def test_cli_applies_structured_rules_in_legacy_draft_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            policy = directory / "policy.json"
+            policy.write_text(
+                json.dumps(
+                    {
+                        "rules": [
+                            {
+                                "id": "CLAIM009",
+                                "type": "regex",
+                                "pattern": "always best",
+                                "severity": "error",
+                                "message": "Substantiate the claim.",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            completed = self.run_guard(
+                "--draft",
+                "-",
+                "--policy",
+                str(policy),
+                "--fail-on-issues",
+                stdin="We are always best.",
+            )
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["findings"][0]["rule_id"], "CLAIM009")
+        self.assertFalse(payload["ready_for_human_review"])
+        self.assertFalse(payload["release_approved"])
 
 
 if __name__ == "__main__":
