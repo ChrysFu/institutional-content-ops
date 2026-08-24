@@ -96,7 +96,7 @@ stateDiagram-v2
 | Intake | `content_id`、内容类型、责任人、计划日 | 责任人与时限唯一明确 | 缺字段则保持 Intake 并提醒责任人 |
 | MaterialReady | 来源清单、授权状态、敏感信息分级 | 每项事实可回查，使用权限明确 | 退回素材收集；权限不明立即升级 |
 | Draft | 模板类型、素材版本、编辑人 | 无自行补充事实，核对项使用 `[CHECK: ...]` 标记 | 回到编辑；禁止带未标记猜测进入检查 |
-| Preflight | 草稿与策略；调用方持有修订号和策略版本 | `ready_for_human_review=true` | 输出问题清单；工具异常与内容不通过分开记录 |
+| Preflight | 一个或多个草稿、策略、`content_id`、revision、`policy_version` | 无 error 级 finding，且 `ready_for_human_review=true` | 输出 JSON/SARIF 问题清单；工具异常与内容不通过分开记录 |
 | EditorialReview | 自动检查结果、来源映射、修改记录 | 自审与复审完成，事实/专名/数字已回查 | 退回 Draft，并递增 revision |
 | FinalApproval | 定稿、发布时间、权限证明 | 有权负责人明确批准 | 退回复审；自动化永不替代该节点 |
 | Scheduled | 批准记录、渠道、发布时间 | 发布前再次确认时效与事实未变化 | 失效则撤销排期并回到 FinalApproval |
@@ -105,14 +105,19 @@ stateDiagram-v2
 
 ### 最小审计字段
 
-每次状态变化至少记录：`content_id`、`revision`、`from_state`、`to_state`、操作者、时间、`source_hash`、`policy_version`、原因和关联证据。相同 `content_id + revision + target_state` 的重复请求应视为幂等操作，避免网络重试造成重复发布或重复通知。`src/content_guard.py` 是无状态预检适配器，只返回检查结果，不负责状态持久化或审计信封；调用方应在写入台账/事件时附加这些元数据。`policy_version` 是调用方的审计字段，不是策略 JSON 的配置键，不应传给预检 CLI。
+每次状态变化至少记录：`content_id`、`revision`、`from_state`、`to_state`、操作者、时间、`source_hash`、`policy_version`、原因和关联证据。相同 `content_id + revision + target_state` 的重复请求应视为幂等操作，避免网络重试造成重复发布或重复通知。
+
+批量预检由 `src/content_guard.py --scan` 接收一个或多个文件/目录，递归读取 `.md` 与 `.txt`，忽略不支持的文件类型，并按确定性顺序输出结果。每份文档记录 SHA-256；审计信封记录 `content_id`、revision、`policy_version`、策略哈希和确定性 `scan_id`。这些字段提高可追溯性，但工具仍不负责状态持久化，也绝不生成发布批准。调用方必须将报告与状态事件一同保存。
+
+规则必须有稳定 ID、类型、严重级别和人工可读消息。`error` 阻止进入人工审阅；`warning` 与 `note` 用于提示和观察，不自动阻止流转。内置兼容规则使用 `content.unresolved_check`、`content.required_term`、`content.forbidden_term`，扩展规则支持 `required_term`、`forbidden_term` 和 `regex`。JSON 用于工作流编排，SARIF 2.1.0 用于代码扫描、制品归档和逐行定位。
 
 ## 六、异常处理、重试与升级
 
 | 异常类型 | 自动动作 | 重试上限 | 升级条件 | 人工处置 |
 |---|---|---:|---|---|
 | 输入缺失/格式错误 | 立即拒绝并返回可定位错误 | 0 | 关键字段影响当日节点 | 补齐输入后创建新 revision |
-| 自动预检不通过 | 输出全部问题，不改变发布状态 | 0 | 同类问题连续出现 3 次 | 编辑负责人复盘模板或策略 |
+| 自动预检不通过 | 输出全部 finding，不改变发布状态 | 0 | 同类 error 连续出现 3 次 | 编辑负责人复盘模板或策略 |
+| 批量输入部分不可读 | 整批失败关闭，不输出“部分通过”结论 | 0 | 影响当日审阅或多次出现编码问题 | 修复 UTF-8/权限后以同一审计上下文重跑 |
 | 自动预检工具异常 | 保留草稿与日志，禁止误判为通过 | 2 | 两次重试仍失败 | 转人工检查并登记降级原因 |
 | 外部平台暂时失败 | 指数退避，复用幂等键 | 3 | 超过 15 分钟或临近时效窗口 | 决定延迟、换渠道或取消 |
 | 来源事实变化 | 冻结排期并使原批准失效 | 0 | 涉及人物、数字、政策或法律表述 | 回到事实核对和终审 |

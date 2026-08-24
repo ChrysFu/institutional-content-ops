@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import re
+from dataclasses import dataclass
+from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-
 MARKDOWN_LINK_PATTERN = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)")
+MARKDOWN_HEADING_PATTERN = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$", re.MULTILINE)
+EXPLICIT_ANCHOR_PATTERN = re.compile(r"<a\s+[^>]*id=[\"']([^\"']+)[\"'][^>]*>", re.IGNORECASE)
+NON_ANCHOR_CHARACTER_PATTERN = re.compile(r"[^\w\- ]", re.UNICODE)
 IGNORED_DIRECTORIES = frozenset({".git", ".readme-architect", "__pycache__"})
 
 
@@ -54,10 +56,29 @@ def _read_utf8(root: Path, document: Path) -> tuple[str | None, ValidationIssue 
 def _validate_markdown(root: Path, document: Path, content: str) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     relative_document = document.relative_to(root)
+    anchors = set(EXPLICIT_ANCHOR_PATTERN.findall(content))
+    anchor_counts: dict[str, int] = {}
+    for heading in MARKDOWN_HEADING_PATTERN.findall(content):
+        base_anchor = NON_ANCHOR_CHARACTER_PATTERN.sub("", heading).strip().lower().replace(" ", "-")
+        occurrence = anchor_counts.get(base_anchor, 0)
+        anchors.add(base_anchor if occurrence == 0 else f"{base_anchor}-{occurrence}")
+        anchor_counts[base_anchor] = occurrence + 1
+
     for raw_target in MARKDOWN_LINK_PATTERN.findall(content):
         target = raw_target.strip("<>")
         parsed = urlsplit(target)
-        if parsed.scheme or target.startswith(("#", "/", "//")):
+        if target.startswith("#"):
+            anchor = unquote(parsed.fragment)
+            if anchor and anchor not in anchors:
+                issues.append(
+                    ValidationIssue(
+                        "missing_local_anchor",
+                        relative_document,
+                        f"anchor does not exist: {target}",
+                    )
+                )
+            continue
+        if parsed.scheme or target.startswith(("/", "//")):
             continue
         local_path = unquote(parsed.path)
         if not local_path:
